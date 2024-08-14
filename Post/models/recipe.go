@@ -1,9 +1,12 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Food struct {
 	ID              int       `json:"id"`
+	UserID          int       `json:"user_id"`
 	FoodName        string    `json:"foodname"`
 	Materials       string    `json:"materials"`
 	EatPerson       int       `json:"eatperson"`

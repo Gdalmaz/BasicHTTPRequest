@@ -17,31 +17,21 @@ func AddTaste(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "A-T-1"})
 	}
 
-	// Bearer token'ı ayıklıyoruz
 	token := authHeader[len("Bearer "):]
 	log.Println(token)
 
-	// Token kontrolü yapıyoruz
 	tokenResponse, err := helpers.CheckToken(token)
 	if err != nil {
 		return c.Status(403).JSON(fiber.Map{"status": "error", "message": "Invalid token", "data": err.Error()})
 	}
 
-	// Eğer userInfo boşsa, token geçerli değil, işlemi durduruyoruz
-	// if tokenResponse != nil || tokenResponse.Data != nil {
-	// 	return c.Status(403).JSON(fiber.Map{"status": "error", "message": "Unauthorized"})
-	// }
-	log.Println(tokenResponse)
+	if tokenResponse == nil || tokenResponse.Data == nil {
+		return c.Status(403).JSON(fiber.Map{"status": "error", "message": "Unauthorized"})
+	}
 
 	food := new(models.Food)
+	food.UserID = tokenResponse.Data.ID
 
-	// err = c.BodyParser(&food)
-
-	// if err != nil {
-	// 	return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Error parsing request body", "data": err.Error()})
-	// }
-
-	// Dosya yükleme işlemleri
 	file, err := c.FormFile("image")
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "not loading file", "data": err.Error()})
@@ -66,7 +56,6 @@ func AddTaste(c *fiber.Ctx) error {
 	food.Image = id
 	food.ImageUrl = url
 
-	// Diğer form alanlarını alıyoruz
 	foodname := c.FormValue("foodname")
 	materials := c.FormValue("materials")
 	eatpersonStr := c.FormValue("eatperson")

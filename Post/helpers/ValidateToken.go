@@ -41,28 +41,22 @@ func CheckToken(token string) (*TokenResponse, error) {
 		return nil, fmt.Errorf("Unauthorized: %s", resp.Status)
 	}
 
-	// Yanıtın ham verilerini kontrol et
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Error reading response body: %v", err)
 		return nil, err
 	}
 
-	// Eğer bodyBytes boş ise bunu loglayın
 	if len(bodyBytes) == 0 {
 		log.Println("Response body is empty")
 		return nil, fmt.Errorf("response body is empty")
 	}
 
-	// Ham yanıtı loglayın
-	log.Printf("Raw response body: %s", string(bodyBytes))
-	log.Println("asdlkmasdlmkasdlmkasdlmkasdlmk")
-	if err = json.Unmarshal([]byte(bodyBytes), &TokenResponse{}); err != nil {
-
+	var tokenResponse TokenResponse
+	if err = json.Unmarshal(bodyBytes, &tokenResponse); err != nil {
 		log.Printf("Failed to unmarshal response: %v", err)
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	// JSON ayrıştırma başarılıysa, sonucu döndür
-	return &TokenResponse{}, nil
+	return &tokenResponse, nil
 }
