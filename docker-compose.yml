@@ -1,0 +1,83 @@
+version: "3"
+services:
+  app_postgres_auth:
+    image: postgres:latest
+    restart: no
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_AUTH_DB}
+      POSTGRES_USER: ${POSTGRES_AUTH_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_AUTH_PASSWORD}
+    volumes:
+      - app_postgres_auth_vol:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  app_postgres_post:
+    image: postgres:latest
+    restart: no
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_FINANCE_DB}
+      POSTGRES_USER: ${POSTGRES_FINANCE_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_FINANCE_PASSWORD}
+    volumes:
+      - app_postgres_post_vol:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  auth:
+    container_name: auth
+    image: cosmtrek/air:v1.44.0
+    restart: no
+    working_dir: /app
+    volumes:
+      - ./Auth:/app
+      - ./.env:/app/.env
+    ports:
+      - "9090:9090"
+    depends_on:
+      - app_postgres_auth
+      - rabbitmq
+    environment:
+      GOFLAGS: "-buildvcs=false"
+    networks:
+      - app_network
+
+  post:
+    container_name: post
+    image: cosmtrek/air:v1.44.0
+    restart: no
+    working_dir: /app
+    volumes:
+      - ./Post:/app
+      - ./.env:/app/.env
+    ports:
+      - "9091:9091"
+    depends_on:
+      - app_postgres_post
+      - rabbitmq
+    environment:
+      GOFLAGS: "-buildvcs=false"
+    networks:
+      - app_network
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    restart: no
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - app_network
+
+volumes:
+  app_postgres_post_vol:
+  app_postgres_auth_vol:
+
+networks:
+  app_network:
+    driver: bridge
